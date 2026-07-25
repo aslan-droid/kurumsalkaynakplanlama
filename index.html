@@ -2,7 +2,6 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <!-- iOS cihazlarda istenmeyen yakınlaştırmaları önlemek için özel viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ERP Master - Mobil Uyumlu Öğrenme</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -29,30 +28,32 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .animate-up { animation: fadeIn 0.5s ease-out forwards; }
 
-        /* Mobil Menü Butonu & Overlay */
+        /* Mobil Menü Butonu & Overlay - iPhone Düzeltmeleri */
         #mobile-menu-toggle {
             display: none;
             position: fixed;
             top: 15px;
             left: 15px;
-            z-index: 999;
+            z-index: 9999; /* Her zaman en üstte */
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             border: none;
-            padding: 10px 18px;
+            padding: 12px 20px;
             border-radius: 8px;
             font-size: 1.1rem;
             font-weight: 600;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
         #mobile-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6);
-            z-index: 998;
+            z-index: 9998;
             backdrop-filter: blur(2px);
+            cursor: pointer;
         }
 
         /* Sidebar */
@@ -121,18 +122,19 @@
                 height: 100vh; 
                 transform: translateX(-100%); 
                 box-shadow: 10px 0 20px rgba(0,0,0,0.5); 
+                z-index: 9999 !important; /* iPhone için garanti üst katman */
             }
-            #sidebar.open { transform: translateX(0); }
-            #mobile-overlay.active { display: block; }
+            #sidebar.open { transform: translateX(0) !important; }
+            #mobile-overlay.active { display: block !important; }
             
-            #main-content { padding: 80px 15px 30px 15px; } /* Üst menü butonu için boşluk */
+            #main-content { padding: 80px 15px 30px 15px; }
             .content-title { font-size: 1.8rem; }
             .content-img { height: 180px; }
             .card { padding: 20px; }
             .card h3 { font-size: 1.15rem; }
             .question-block { padding: 20px; }
             .question-text { font-size: 1.05rem; }
-            .btn { width: 100%; margin-bottom: 10px; } /* Telefondaki butonlar geniş olsun */
+            .btn { width: 100%; margin-bottom: 10px; }
             
             .btn-group { display: flex; flex-direction: column; gap: 10px; }
         }
@@ -140,8 +142,9 @@
 </head>
 <body>
 
-    <button id="mobile-menu-toggle">☰ Menü</button>
-    <div id="mobile-overlay"></div>
+    <!-- Menü Açma/Kapama İşlevleri Doğrudan HTML'e Eklendi -->
+    <button id="mobile-menu-toggle" onclick="openMenu()">☰ Menü</button>
+    <div id="mobile-overlay" onclick="closeMenu()"></div>
 
     <div id="sidebar">
         <div class="sidebar-header">
@@ -171,6 +174,19 @@
     </div>
 
     <script>
+        // Mobil Menü Aç/Kapat Fonksiyonları
+        function openMenu() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('mobile-overlay').classList.add('active');
+        }
+        function closeMenu() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('mobile-overlay').classList.remove('active');
+        }
+        function closeSidebarOnMobile() {
+            if(window.innerWidth <= 900) { closeMenu(); }
+        }
+
         const erpData = [
             {
                 id: 0,
@@ -251,5 +267,4 @@
                     { q: "Hiçbir sunucu kurulumu gerektirmeyen, aylık/yıllık abonelikle internet üzerinden erişilen ve özellikle küçük işletmeler için uygun olan ERP modeli hangisidir?", options: ["Hibrit ERP", "Yerinde ERP", "Bulut (Cloud) ERP", "Açık Kaynak ERP"], answer: 2, feedback: "Bulut ERP, kurulum gerektirmez, internet üzerinden erişilir ve düşük başlangıç maliyeti sunar." },
                     { q: "İşletmenin kritik muhasebe verilerini kendi yerel sunucusunda, İnsan Kaynakları gibi daha esnek modüllerini ise bulutta çalıştırdığı kurulum modeline ne ad verilir?", options: ["Tam Bulut ERP", "Açık Kaynak ERP", "Hibrit (Hybrid) ERP", "Geleneksel ERP"], answer: 2, feedback: "Yerinde kurulum ile bulut ERP'nin birlikte kullanıldığı modele Hibrit ERP denir." },
                     { q: "Lisans maliyeti düşük veya ücretsiz olan, kaynak kodu geliştiricilere açık olduğu için işletmenin teknik ekibi tarafından istenilen şekilde özelleştirilebilen model hangisidir?", options: ["Açık Kaynak (Open Source) ERP", "Kapalı Kaynak ERP", "On-Premise ERP", "Bulut ERP"], answer: 0, feedback: "Açık Kaynak ERP, kodları açık olan, istenildiği gibi geliştirilebilen ve lisans maliyeti düşük olan sistemdir." },
-                    { q: "Aşağıdakilerden hangisi ERP kurulumu ve işletimi esnasında karşılaşılan güçlüklerden biri olarak GÖSTERİLEMEZ?", options: ["Kurum çalışanlarının yeni sisteme direnç göstermesi", "Altyapı yetersizliği", "Danışmanlık hizmet kalitesinin yeterli olmaması", "Yazılımların her zaman kusursuz ve hatasız çalışması"], answer: 3, feedback: "Hiçbir yazılım doğuştan kusursuz değildir; kurulum güçlükleri arasında direnç, altyapı eksikliği ve operasyonel süreç değişim zorunluluğu yer alır." },
-                    { q: "Aşağıdakilerden hangisi ERP'nin temel özelliklerinden biridir?", options: ["Birbirinden bağımsız çoklu veri tabanları kullanması", "Tutarsız kullanıcı arayüzü sunması", "Modüler yapıda olması", "Sadece üst yönetimin giriş yetkisinin olması"], answer: 
+                    { q: "Aşağıdakilerden hangisi ERP kurulumu 
