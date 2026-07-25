@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Master - Detaylı İnteraktif Öğrenme</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #7c3aed;
+            --success: #059669;
+            --danger: #dc2626;
+            --warning: #ea580c;
+            --text-main: #1f2937;
+            --text-light: #4b5563;
+            --white: #ffffff;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-up { animation: fadeIn 0.5s ease-out forwards; }
+
+        /* Sidebar */
+        #sidebar { width: 350px; background-color: var(--sidebar-bg); color: var(--white); display: flex; flex-direction: column; z-index: 10; overflow-y: auto;}
+        .sidebar-header { padding: 30px 20px; text-align: center; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar-header h2 { font-size: 1.6rem; font-weight: 700; background: linear-gradient(to right, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        #topic-list { padding: 15px 0; }
+        .topic-btn { width: 100%; padding: 16px 25px; border: none; background: transparent; color: #d1d5db; text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; font-weight: 500; border-left: 4px solid transparent; transition: 0.3s; }
+        .topic-btn:hover, .topic-btn.active { background-color: var(--sidebar-hover); color: var(--white); border-left: 4px solid var(--primary); }
+        
+        .exam-section { padding: 20px; background: rgba(0,0,0,0.25); margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); }
+        .exam-section h4 { color: #fdba74; margin-bottom: 12px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; text-align: center;}
+        .exam-btn { width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 6px; background: linear-gradient(135deg, var(--warning), #c2410c); color: white; cursor: pointer; font-weight: 600; transition: 0.3s; }
+        .exam-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4); }
+
+        /* Ana İçerik */
+        #main-content { flex: 1; overflow-y: auto; padding: 40px; scroll-behavior: smooth; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        .content-img { width: 100%; height: 300px; object-fit: cover; border-radius: 12px; margin-bottom: 25px; box-shadow: var(--card-shadow); }
+        .content-title { font-size: 2.5rem; font-weight: 700; color: var(--sidebar-bg); margin-bottom: 25px; border-bottom: 4px solid var(--primary); display: inline-block; padding-bottom: 10px;}
+        
+        /* Kartlar (Artık Tek Sütun Detaylı Okuma İçin) */
+        .grid-cards { display: grid; grid-template-columns: 1fr; gap: 25px; margin-bottom: 30px; }
+        .card { background: var(--white); border-radius: 12px; padding: 35px; box-shadow: var(--card-shadow); border-top: 4px solid var(--primary); }
+        .card h3 { display: flex; align-items: center; gap: 8px; font-size: 1.4rem; color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;}
+        .card p { font-size: 1.05rem; line-height: 1.8; color: var(--text-light); margin-bottom: 15px; text-align: justify; }
+        .card ul, .card ol { padding-left: 25px; margin-bottom: 15px; color: var(--text-light); font-size: 1.05rem; line-height: 1.8; }
+        .card li { margin-bottom: 8px; }
+        .card table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 1rem; }
+        .card th, .card td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
+        .card th { background-color: #f8fafc; color: var(--primary); font-weight: 600; }
+        .highlight-box { background-color: #eff6ff; border-left: 4px solid var(--primary); padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0; }
+
+        /* Butonlar */
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1.1rem; transition: 0.3s; }
+        .btn-gradient { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
+        .btn-gradient:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4); }
+        
+        /* Test Arayüzü */
+        .question-block { background: var(--white); padding: 30px; border-radius: 12px; margin-bottom: 25px; box-shadow: var(--card-shadow); border-left: 6px solid var(--secondary); }
+        .question-text { font-size: 1.2rem; font-weight: 600; margin-bottom: 20px; color: var(--sidebar-bg); line-height: 1.6;}
+        .option-label { display: block; padding: 16px 20px; margin: 12px 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .option-label:hover { background: #f1f5f9; border-color: #cbd5e1; transform: translateX(5px); }
+        input[type="radio"] { margin-right: 15px; transform: scale(1.3); accent-color: var(--primary); }
+        
+        .feedback { margin-top: 20px; padding: 20px; border-radius: 8px; display: none; font-size: 1.05rem; line-height: 1.6; animation: fadeIn 0.4s; }
+        .feedback.correct { display: block; background: #ecfdf5; color: #065f46; border-left: 5px solid var(--success); }
+        .feedback.wrong { display: block; background: #fef2f2; color: #991b1b; border-left: 5px solid var(--danger); }
+        
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2>🚀 ERP Master</h2>
+            <p>ENM424 Sınav Modülü</p>
+        </div>
+        <div id="topic-list"></div>
+        
+        <div class="exam-section">
+            <h4>🏆 Genel Deneme Sınavları</h4>
+            <button class="exam-btn" onclick="loadFinalExam(1)">Genel Deneme Sınavı 1 (20 Soru)</button>
+            <button class="exam-btn" onclick="loadFinalExam(2)">Genel Deneme Sınavı 2 (20 Soru)</button>
+            <button class="exam-btn" onclick="loadFinalExam(3)">Genel Deneme Sınavı 3 (20 Soru)</button>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div class="container animate-up" id="content-area">
+            <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80" alt="ERP" class="content-img">
+            <h1 class="content-title">Detaylı Öğrenme Platformuna Hoş Geldin!</h1>
+            <div class="card">
+                <h3>💡 Sistemi Nasıl Kullanacaksın?</h3>
+                <p>Bu sistem PDF ders notlarının en ince detaylarına kadar genişletilmiş ve tamamen interaktif hale getirilmiş halidir[cite: 1]. Sol menüden çalışmak istediğin ERP konusunu seçerek zenginleştirilmiş ders notlarına erişebilirsin.</p>
+                <p>Her konunun sonunda, konuyu pekiştirmen için hazırlanan testler yer almaktadır. Sınava tam hazır hissettiğinde, tüm modülleri kapsayan ve havuzdan rastgele çekilen 20 soruluk Genel Deneme Sınavlarını çözebilirsin.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const erpData = [
+            {
+                id: 0,
+                title: "1. Giriş ve Temel Kavramlar",
+                content: `
+                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80" alt="Business Data" class="content-img">
+                    <div class="grid-cards">
+                        <div class="card">
+                            <h3>📌 ERP Nedir ve Neden Ortaya Çıkmıştır?</h3>
+                            <p><strong>Kurumsal Kaynak Planlama (ERP)</strong>, bir işletmenin tüm temel süreçlerini tek bir bilgi sistemi altında toplayan entegre bir yazılım sistemidir[cite: 1]. APICS tanımına göre ERP; müşteri siparişini karşılamada kaynakları almak, imal etmek, sevk etmek ve hesaplamak üzere planlayan muhasebe temelli bir bilişim sistemidir[cite: 1].</p>
+                            <p><strong>Ortaya Çıkış Nedenleri:</strong> Küreselleşme ve uluslararası rekabet, bilgi teknolojisinin sağladığı yeni olanaklar, uluslararası dağıtım zincirlerinin daha yaygın kullanımı, çok tesisli organizasyonların iyi idare edilmesi ihtiyacı ve ürün politikalarındaki değişmelerdir[cite: 1].</p>
+                            <div class="highlight-box">
+                                <strong>ERP'nin Temel Amacı:</strong> İş süreçlerini bütünleştirmek, bilgi akışını hızlandırmak, verilerin tek merkezde (ortak veri tabanı) tutulmasını sağlamak, hataları azaltmak ve karar vermeyi kolaylaştırmaktır[cite: 1].
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>📈 Tarihsel Gelişim Süreci</h3>
+                            <p>ERP birden ortaya çıkmamış, sanayinin ve teknolojinin ihtiyaçlarına göre evrimleşmiştir[cite: 1]:</p>
+                            <ul>
+                                <li><strong>1960'lar - Stok Kontrol Sistemleri:</strong> Sadece envanter takibi yapılır[cite: 1].</li>
+                                <li><strong>1970'ler - MRP (Material Requirements Planning):</strong> Malzeme ihtiyaç planlaması yapılır; malzeme miktarlarının ve zamanlarının hesaplanması devridir[cite: 1].</li>
+                                <li><strong>1980'ler - MRP II, DRP, CIM:</strong> MRP sistemine pazarlama ve finans fonksiyonları eklenmiş, üretim kaynaklarının planlanması (MRP II) sağlanmıştır[cite: 1]. Ayrıca dağıtım kanalları (DRP) ve ürün geliştirme ile imalatın birleşimi (CIM) bu dönemdedir[cite: 1].</li>
+                                <li><strong>1990'lar - ERP:</strong> İşletme genelinde bilgi entegrasyonunu gerçekleştiren bütünleşik yönetim sistemi[cite: 1].</li>
+                                <li><strong>2000'ler ve Sonrası - ERP II / Bulut ERP:</strong> İnternet, müşteri (CRM) ve tedarikçi entegrasyonu (SCM), mobil ve bulut teknolojileri eklenmiştir[cite: 1].</li>
+                            </ul>
+                        </div>
+
+                        <div class="card">
+                            <h3>⚙️ ERP Yazılım Modelleri ve Detaylı Karşılaştırması</h3>
+                            <p>İşletmeler ihtiyaçlarına ve büyüklüklerine göre farklı ERP kurulum modelleri tercih ederler[cite: 1]:</p>
+                            <table>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Kurulum Yeri</th>
+                                    <th>Maliyet</th>
+                                    <th>Güvenlik</th>
+                                    <th>Özellikler</th>
+                                </tr>
+                                <tr>
+                                    <td><strong>Yerinde (On-Premise)</strong></td>
+                                    <td>Şirket Sunucusu</td>
+                                    <td>Yüksek</td>
+                                    <td>Çok Yüksek</td>
+                                    <td>Veriler şirket içindedir, tam kontrol sağlar. Büyük otomotiv fabrikaları gibi 7/24 kesintisiz yüksek performans arayanlar tercih eder[cite: 1].</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Bulut (Cloud ERP)</strong></td>
+                                    <td>Bulut Sunucuları</td>
+                                    <td>Düşük Başlangıç</td>
+                                    <td>Sağlayıcıya Bağlı</td>
+                                    <td>Kurulum gerektirmez, internet üzerinden erişilir. Düşük maliyetli, otomatik güncellenen ve küçük işletmelere uygun modeldir[cite: 1].</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Hibrit (Hybrid)</strong></td>
+                                    <td>Bulut + Şirket</td>
+                                    <td>Orta</td>
+                                    <td>Yüksek</td>
+                                    <td>Kritik veriler (muhasebe vb.) şirket içinde, diğer modüller (İK vb.) bulutta çalışır. Esneklik sağlar, orta ve büyük işletmeler içindir[cite: 1].</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Açık Kaynak (Open Source)</strong></td>
+                                    <td>İstenilen Ortam</td>
+                                    <td>Düşük / Yok</td>
+                                    <td>Yapılandırmaya Bağlı</td>
+                                    <td>Kaynak kodu açıktır. Lisans ücretsizdir ancak teknik bilgi ve destek gerektirir[cite: 1].</td>
+                                </tr>
+                            </table>
+                            <div class="highlight-box">
+                                <strong>Kurulum Güçlükleri:</strong> Personel direnci, altyapı yetersizliği, danışmanlık kalitesizliği, operasyonel süreçlerin değiştirilme zorunluluğu ve dokümantasyon eksikliğidir[cite: 1].
+                            </div>
+                        </div>
+                    </div>
+                `,
+                questions: [
+                    { q: "Aşağıdakilerden hangisi ERP sisteminin işletmeye sağladığı temel avantajlardan biri değildir?", options: ["Ortak veri tabanı kullanımıyla bilgi tekrarını önlemesi", "İşletme departmanları arasında bilgi akışını hızlandırması", "Veri giriş tekrarını zorunlu kılarak güvenliği sağlaması", "Maliyet minimizasyonu ve verimlilik artışı sağlaması"], answer: 2, feedback: "ERP'nin en büyük avantajı bilgi tekrarını ÖNLEMEK'tir[cite: 1]. Tüm birimler aynı ortak veri tabanını kullanır[cite: 1]." },
+                    { q: "ERP'nin tarihsel gelişiminde, 'Sadece Envanter Kontrolü' hangi yıllarda kullanılmaktaydı?", options: ["1960'lar", "1970'ler", "1980'ler", "1990'lar"], answer: 0, feedback: "1960'lar sadece stok (envanter) kontrolü devridir[cite: 1]." },
+                    { q: "Malzeme miktarlarının ve zamanlarının hesaplanması (MRP) dönemi hangi yılları kapsar?", options: ["1960'lar", "1970'ler", "1980'ler", "1990'lar"], answer: 1, feedback: "1970'ler, Malzeme İhtiyaç Planlaması (MRP) dönemidir[cite: 1]." },
+                    { q: "MRP sistemine pazarlama ve finans fonksiyonlarının eklenmesiyle oluşan yapıya ne ad verilir?", options: ["CIM", "DRP", "MRP II", "ERP II"], answer: 2, feedback: "1980'lerde pazarlama ve finansın eklenmesiyle MRP II (Üretim Kaynakları Planlama) oluşmuştur[cite: 1]." },
+                    { q: "2000'li yıllarda ortaya çıkan ve internet, Müşteri İlişkileri (CRM), Tedarik Zinciri (SCM) gibi dış entegrasyonları barındıran nesil hangisidir?", options: ["MRP II", "DRP", "ERP", "ERP II"], answer: 3, feedback: "2000'ler ve sonrasında ERP sistemlerine web bağlantıları ve dış entegrasyonlar eklenerek ERP II (Bulut ERP) ortaya çıkmıştır[cite: 1]." },
+                    { q: "Hangi ERP kurulum modeli yüksek ilk yatırım maliyeti gerektirir ve genellikle verilerin kesinlikle şirket dışına çıkmasını istemeyen büyük otomotiv fabrikaları tarafından tercih edilir?", options: ["Bulut (Cloud) ERP", "Yerinde (On-Premise) ERP", "Açık Kaynak ERP", "Mobil ERP"], answer: 1, feedback: "Yerinde ERP kurulumu; verilerin şirket içinde saklandığı, kurulum maliyeti yüksek ve büyük işletmelerce tercih edilen modeldir[cite: 1]." },
+                    { q: "Hiçbir sunucu kurulumu gerektirmeyen, aylık/yıllık abonelikle internet üzerinden erişilen ve özellikle küçük işletmeler için uygun olan ERP modeli hangisidir?", options: ["Hibrit ERP", "Yerinde ERP", "Bulut (Cloud) ERP", "Açık Kaynak ERP"], answer: 2, feedback: "Bulut ERP, kurulum gerektirmez, internet üzerinden erişilir ve düşük başlangıç maliyeti sunar[cite: 1]." },
+                    { q: "İşletmenin kritik muhasebe verilerini kendi yerel sunucusunda, İnsan Kaynakları gibi daha esnek modüllerini ise bulutta çalıştırdığı kurulum modeline ne ad verilir?", options: ["Tam Bulut ERP", "Açık Kaynak ERP", "Hibrit (Hybrid) ERP", "Geleneksel ERP"], answer: 2, feedback: "Yerinde kurulum ile bulut ERP'nin birlikte kullanıldığı modele Hibrit ERP denir[cite: 1]." },
+                    { q: "Lisans maliyeti düşük veya ücretsiz olan, kaynak kodu geliştiricilere açık olduğu için işletmenin teknik ekibi tarafından istenilen şekilde özelleştirilebilen model hangisidir?", options: ["Açık Kaynak (Open Source) ERP", "Kapalı Kaynak ERP", "On-Premise ERP", "Bulut ERP"], answer: 0, feedback: "Açık Kaynak ERP, kodları açık olan, istenildiği gibi geliştirilebilen ve lisans maliyeti düşük olan sistemdir[cite: 1]." },
+                    { q: "Aşağıdakilerden hangisi ERP kurulumu ve işletimi esnasında karşılaşılan güçlüklerden biri olarak GÖSTERİLEMEZ?", options: ["Kurum çalışanlarının yeni sisteme direnç göstermesi", "Altyapı yetersizliği", "Danışmanlık hizmet kalitesinin yeterli olmaması", "Yazılımların her zaman kusursuz ve hatasız çalışması"], answer: 3, feedback: "Kurulum güçlükleri arasında direnç, altyapı eksikliği ve operasyonel süreç değişim zorunluluğu yer alır; hiçbir yazılım doğuştan kusursuz değildir[cite: 1]." },
+                    { q: "Aşağıdakilerden hangisi ERP'nin temel özelliklerinden biridir?", options: ["Birbirinden bağımsız çoklu veri tabanları kullanması", "Tutarsız kullanıcı arayüzü sunması", "Modüler yapıda olması", "Sadece üst yönetimin giriş yetkisinin olması"], answer: 2, feedback: "ERP modüler yapıdadır, tek ortak veri tabanı kullanır ve tutarlı kullanıcı arayüzü sunar[cite: 1]." },
+                    { q: "CIM (Bilgisayarla Bütünleşik Üretim) kavramının amacı nedir?", options: ["Müşteri şikayetlerini analiz etmek", "Dağıtım kanallarını planlamak", "Ürün geliştirme (AR-GE) ve imalat faaliyetlerini birleştirmek", "Sadece fatura kesmek"], answer: 2, feedback: "CIM, ürün geliştirme ve imalat faaliyetlerinin bilgisayarla bütünleştirilmesidir[cite: 1]." },
+                    { q: "ERP sisteminin bir işletmeye sağladığı fonksiyonlar arasında aşağıdakilerden hangisi yer alır?", options: ["Küresel lojistik, envanter kontrolü ve arz/talep entegrasyonu", "İşletme binalarının mimari çizimini yapmak", "Rakip firmaların muhasebe kayıtlarına erişmek", "Personelin günlük yemeğini pişirmek"], answer: 0, feedback: "ERP, üst düzey bilgi entegrasyonu, en güncel bilgiye hızlı ulaşım ve küresel lojistik entegrasyonu sağlar[cite: 1]." },
+                    { q: "Büyük ölçekli işletmelerin ERP stratejisi genellikle ne yöndedir?", options: ["Sadece açık kaynaklı, desteksiz yazılımları seçmek", "Sadece bulut çözümlerle ilerleyip güvenlikten taviz vermek", "İşletmedeki tüm bileşenleri kapsayan, rekabet stratejisini artıran bütünleşik modelleri (örn: Hibrit veya On-Premise) kullanmak", "ERP kullanmamak"], answer: 2, feedback: "Büyük ölçekli işletmeler tüm bileşenleri kapsayan ve rekabeti artıran ERP yazılım modelleri (Bulut ve şirket içini bütünleştiren Hibrit gibi) kullanır[cite: 1]." }
+                ]
+            },
+            {
+                id: 1,
+                title: "2. Malzeme Yönetimi",
+                content: `
+                    <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80" alt="Warehouse" class="content-img">
+                    <div class="grid-cards">
+                        <div class="card">
+                            <h3>📦 Malzeme Yönetimi (MM) Nedir?</h3>
+                            <p>İşletmenin ihtiyaç duyduğu malzemelerin doğru miktarda, doğru zamanda, doğru kalitede ve uygun maliyetle satın alınması, depolanması ve üretime ulaştırılması sürecidir[cite: 1].</p>
+                            <p><strong>Detaylı İş Akışı:</strong> 
+                            <ol>
+                                <li><strong>İhtiyaç Belirleme:</strong> Üretim veya diğer bölümler ihtiyacı belirler[cite: 1].</li>
+                                <li><strong>Satın Alma:</strong> Doğru miktar/zamanla sipariş edilir[cite: 1].</li>
+                                <li><strong>Mal Kabul:</strong> Malzeme tedarikçiden teslim alınır[cite: 1].</li>
+                                <li><strong>Depolama:</strong> Uygun koşullarda saklanır ve sisteme kaydedilir[cite: 1].</li>
+                                <li><strong>Üretime Ulaştırma:</strong> İhtiyaç anında üretim hattına sevk edilir[cite: 1].</li>
+                                <li><strong>Kayıt ve Kontrol:</strong> Tüm stoklar sürekli izlenir[cite: 1].</li>
+                            </ol>
+                            </p>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>🏷️ Malzeme Türleri ve ERP'deki İşlemleri</h3>
+                            <ul>
+                                <li><strong>Hammaddeler:</strong> Üretime giren temel malzemelerdir (Örn: Demir, Çelik, Plastik granül). ERP'de satın alma, depoya giriş ve üretime çıkış işlemleri görür[cite: 1].</li>
+                                <li><strong>Yarı Mamul:</strong> Belirli işlemlerden geçmiş ama henüz tamamlanmamış üründür (Örn: Boyanmış otomobil kapısı, işlenmiş motor bloğu)[cite: 1].</li>
+                                <li><strong>Mamul:</strong> Üretim işlemleri tamamlanmış satışa hazır üründür (Örn: Otomobil, Bilgisayar)[cite: 1].</li>
+                                <li><strong>Yardımcı Malzemeler:</strong> Üretime doğrudan katılmayan ama üretime yardımcı olanlardır (Örn: Vida, Civata, Yağ, Ambalaj)[cite: 1].</li>
+                            </ul>
+                        </div>
+
+                        <div class="card">
+                            <h3>📊 ERP'de Stok Takibi ve Malzeme Kartı</h3>
+                            <p>ERP sisteminde her malzemenin bir kimliği (Malzeme Kartı) vardır[cite: 1]. Bu kartta: Malzeme Kodu, Adı, Türü, Birimi, Mevcut Stok, Min/Max Stok, Depo, Tedarikçi ve Birim Fiyatı bilgileri yer alır[cite: 1].</p>
+                            <div class="highlight-box">
+                                <strong>Altın Kural:</strong> ERP sistemlerinde; her satın alma/mal kabul işlemi stok miktarını ARTIRIRKEN (+), üretime malzeme çıkışı, satış veya hurda/fire işlemleri stok miktarını AZALTIR (-)[cite: 1].
+                            </div>
+                            <p><strong>Modüller Arası İlişki:</strong> Üretim planına göre ihtiyaç oluşur ➔ Stok kontrol edilir ➔ Eksik varsa Satın Alma sipariş açar ➔ Depo malı kabul eder (stok artar) ➔ Muhasebe faturayı ve maliyeti işler[cite: 1].</p>
+                        </div>
+                    </div>
+                `,
+                questions: [
+                    { q: "İşletmenin ihtiyaç duyduğu malzemelerin doğru miktarda, zamanda, kalitede ve uygun maliyetle temin edilip yönetilmesi sürecine ne ad verilir?", options: ["İnsan Kaynakları Yönetimi", "Malzeme Yönetimi (MM)", "Finans Yönetimi", "Kalite Kontrol"], answer: 1, feedback: "Malzeme Yönetimi (MM), malzemelerin doğru zamanda, miktarda, kalitede ve maliyetle satın alınması, depolanması sürecidir[cite: 1]." },
+                    { q: "Malzeme Yönetimi iş akışının ilk adımı aşağıdakilerden hangisidir?", options: ["Mal Kabul", "Satın Alma", "Depolama", "İhtiyaç Belirleme"], answer: 3, feedback: "İş akışı, üretim veya ilgili bölümlerin 'İhtiyaç Belirlemesi' ile başlar[cite: 1]." },
+                    { q: "Üretimde kullanılmak üzere satın alınan, henüz işlenmemiş demir, çelik, plastik granül gibi malzemelere ne ad verilir?", options: ["Mamul", "Yardımcı Malzeme", "Hammadde", "Yarı Mamul"], answer: 2, feedback: "Üretime giren henüz işlenmemiş temel malzemelere Hammadde denir[cite: 1]." },
+                    { q: "Üretim sürecinde belirli işlemlerden geçmiş ancak montajı tamamlanmamış (örn: boyanmış kapı, işlenmiş motor bloğu) ürünlere ne denir?", options: ["Mamul", "Yarı Mamul", "Sarf Malzemesi", "Yedek Parça"], answer: 1, feedback: "Henüz tamamlanmamış ürünlere Yarı Mamul denir[cite: 1]." },
+                    { q: "Üretim işlemleri tamamen bitmiş ve satışa hazır hale gelmiş olan otomobil veya buzdolabı gibi ürünler hangi stok sınıfına girer?", options: ["Hammadde", "Yarı Mamul", "Mamul", "Yardımcı Malzeme"], answer: 2, feedback: "Satışa hazır nihai ürünlere Mamul denir[cite: 1]." },
+                    { q: "Ürünün yapısına doğrudan katılmayan fakat üretimin gerçekleşmesi için gerekli olan vida, civata, yağ gibi malzemeler hangi sınıftadır?", options: ["Mamul", "Yardımcı Malzemeler", "Hammadde", "Yarı Mamul"], answer: 1, feedback: "Üretime yardımcı olan bu tür malzemeler Yardımcı Malzemelerdir[cite: 1]." },
+                    { q: "Aşağıdaki işlemlerden hangisi ERP sisteminde stok miktarını POZİTİF (+) yönde etkiler (Artırır)?", options: ["Üretime Çıkış", "Satış", "Hurda / Fire", "Satın Alma / Mal Kabul"], answer: 3, feedback: "Her satın alma ve mal kabul işlemi stok miktarını artırır[cite: 1]." },
+                    { q: "Bir otomotiv fabrikasının başlangıç stoku 1000 kg çeliktir. ERP sistemine göre; Satın Alma +500 kg, Üretime Çıkış -350 kg, Hurda -50 kg şeklinde işlem yapılmıştır. Gün sonu stok kaç kg olur?", options: ["1100", "1150", "1500", "1000"], answer: 0, feedback: "Hesap: 1000 + 500 = 1500. Üretime çıkış 350, hurda 50 toplam 400 azalış. 1500 - 400 = 1100 kg[cite: 1]." },
+                    { q: "Malzeme kartı (kimliği) içerisinde aşağıdaki bilgilerden hangisi genellikle BULUNMAZ?", options: ["Müşterinin ev adresi", "Malzeme Kodu ve Adı", "Minimum ve Maksimum Stok", "Tedarikçi Bilgisi"], answer: 0, feedback: "Malzeme kartında ürünün kodu, adı, birimi, stok limitleri ve tedarikçi bilgisi yer alır; müşteri bilgisi bulunmaz[cite: 1]." },
+                    { q: "ERP'de Malzeme Yönetimi modülü eksik hammaddeleri temin etmek için doğrudan hangi modülle entegre çalışarak sipariş sürecini başlatır?", options: ["Muhasebe", "İnsan Kaynakları", "Satın Alma", "Satış"], answer: 2, feedback: "Eksik malzemeler belirlendikten sonra Satın Alma modülü sipariş oluşturur[cite: 1]." },
+                    { q: "Malzeme Yönetiminin amaçları arasında aşağıdakilerden hangisi yoktur?", options: ["Üretimin durmasını önlemek", "Gereksiz stok oluşmasını engellemek", "Depo düzenini sağlamak", "Rakiplerin üretim sırlarını çalmak"], answer: 3, feedback: "Amaçlar; maliyetleri azaltmak, üretimin durmasını önlemek ve depoyu düzenlemektir[cite: 1]." },
+                    { q: "Üretimde kullanılan malzemelerin maliyet kayıtları otomatik olarak hangi ERP modülüne aktarılır?", options: ["Muhasebe Modülü", "Stok Modülü", "Kalite Modülü", "Depo Modülü"], answer: 0, feedback: "Tüm stok hareketleri mali kayıt olarak Muhasebeye aktarılır[cite: 1]." }
+                ]
+            },
+            {
+                id: 2,
+                title: "3. Satın Alma ve Tedarik Süreci",
+                content: `
+                    <img src="https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?auto=format&fit=crop&w=1200&q=80" alt="Supply Chain" class="content-img">
+                    <div class="grid-cards">
+                        <div class="card">
+                            <h3>🛒 Satın Alma Süreci ve Amacı</h3>
+                            <p>İşletmenin ihtiyaç duyduğu hammadde veya hizmetlerin <strong>doğru miktarda, zamanda, kalitede, tedarikçiden ve maliyetle</strong> temin edilmesidir[cite: 1].</p>
+                            <p><strong>Amaçları:</strong> Üretimin durmasını önlemek, gereksiz stoku engellemek, maliyetleri azaltmak, kaliteli malzeme temin etmek ve güvenilir tedarikçilerle çalışmaktır[cite: 1].</p>
+                            <p><strong>Süreç Adımları:</strong> Üretim Planı ➔ Malzeme İhtiyacı ➔ Satın Alma Talebi ➔ Teklif Toplama ➔ Tedarikçi Seçimi ➔ Satın Alma Siparişi ➔ Mal Kabul ➔ Fatura Kontrolü ➔ Muhasebe[cite: 1].</p>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>📄 Satın Alma Belgeleri (Çok Önemli)</h3>
+                            <ul>
+                                <li><strong>Satın Alma Talebi:</strong> İhtiyacı olan bölümün (örn: Üretim) eksiğini bildirdiği şirket içi belgedir[cite: 1].</li>
+                                <li><strong>Teklif Formu:</strong> Tedarikçilerden fiyat, teslim süresi ve kalite bilgilerinin alındığı belgedir[cite: 1].</li>
+                                <li><strong>Satın Alma Siparişi (Purchase Order):</strong> Tedarikçiye gönderilen; malzeme, miktar, fiyat, teslim tarihi ve ödeme koşullarını içeren <em>resmi sipariş belgesidir</em>[cite: 1].</li>
+                                <li><strong>İrsaliye:</strong> Malzemeler sevk edilirken nakliye ile gelen, ürün cinsi ve miktarını gösteren taşıma belgesidir[cite: 1].</li>
+                                <li><strong>Fatura:</strong> Mali tutarı gösteren ve muhasebe kayıtlarına temel olan yasal belgedir[cite: 1].</li>
+                                <li><strong>Mal Kabul Formu:</strong> Depoya gelen malın miktar/kalite kontrolünden geçtiğini belgeleyen depo formudur[cite: 1].</li>
+                            </ul>
+                        </div>
+
+                        <div class="card">
+                            <h3>🏭 Otomotiv Fabrikası Satın Alma Örneği</h3>
+                            <ol>
+                                <li>ERP üretim planına göre 500 araç üretileceğini görür[cite: 1].</li>
+                                <li>Araç başı 4 lastikten toplam ihtiyaç 2.000 lastik hesaplanır[cite: 1].</li>
+                                <li>Stok modülü mevcut stokun 1.500 olduğunu söyler[cite: 1].</li>
+                                <li>ERP eksik 500 lastik için Satın Alma Talebi oluşturur[cite: 1].</li>
+                                <li>Tedarikçi seçilir ve Satın Alma Siparişi (PO) gönderilir[cite: 1].</li>
+                                <li>Tedarikçiden gelen 500 lastik Mal Kabul ile depoya girer ve stoklar güncellenir[cite: 1].</li>
+                                <li>Fatura bilgileri Muhasebe modülüne aktarılır[cite: 1].</li>
+                            </ol>
+                            <div class="highlight-box">
+                                <strong>Tedarikçi Yönetimi:</strong> ERP üzerinden tedarikçilerin fiyat, kalite ve teslim süresi performansları izlenir[cite: 1]. Teslim edilen ürünlerin kalite puanı ve maliyet analizleri yapılarak en uygun tedarikçi seçilir[cite: 1].
+                            </div>
+                        </div>
+                    </div>
+                `,
+                questions: [
+                    { q: "İşletmenin ihtiyaç duyduğu malzemelerin doğru tedarikçiden ve uygun maliyetle temin edilmesini sağlayan yönetim süreci hangisidir?", options: ["Kalite Yönetimi", "Satın Alma Yönetimi", "Üretim Planlama", "İnsan Kaynakları"], answer: 1, feedback: "Malzeme temin süreci Satın Alma Yönetimi ile sağlanır[cite: 1]." },
+                    { q: "Satın alma sürecinde tedarikçilerden fiyat, teslim süresi ve kalite bilgilerinin istendiği belgeye ne ad verilir?", options: ["İrsaliye", "Satın Alma Talebi", "Teklif Formu", "Mal Kabul Formu"], answer: 2, feedback: "Tedarikçilerden gelen fiyat, teslim ve kalite verileri Teklif Formu ile alınır[cite: 1]." },
+                    { q: "Tedarikçiye malzeme almak amacıyla gönderilen, içerisinde miktar, fiyat, ödeme koşulları ve teslim tarihinin yer aldığı RESMİ evrak hangisidir?", options: ["Satın Alma Talebi", "Fatura", "İrsaliye", "Satın Alma Siparişi"], answer: 3, feedback: "Tedarikçiye resmî sipariş vermek için hazırlanan belge Satın Alma Siparişidir[cite: 1]." },
+                    { q: "Malzemeler fiziksel olarak taşınırken araçta bulundurulan, malzemelerin cinsi ve miktarını gösteren yasal taşıma belgesi nedir?", options: ["Satın Alma Siparişi", "İrsaliye", "Fatura", "Talep Formu"], answer: 1, feedback: "Taşıma işlemi sırasında kullanılan sevk belgesine İrsaliye denir[cite: 1]." },
+                    { q: "Tedarikçiden depoya fiziki olarak gelen malzemelerin sayılarak ve kalite kontrolünden geçirilerek ERP sistemine girişinin yapılması işlemine ne ad verilir?", options: ["Mal Kabul", "Teklif Toplama", "Sipariş Onayı", "Muhasebe Kaydı"], answer: 0, feedback: "Depoya teslim edilen ürünlerin kabul ve kayıt işlemine Mal Kabul denir[cite: 1]." },
+                    { q: "ERP'de tedarikçilerin performansını değerlendirirken aşağıdaki kriterlerden hangisi DİKKATE ALINMAZ?", options: ["Fiyat", "Kalite", "Tedarikçinin kurucu ortaklarının burçları", "Teslimat Süresi"], answer: 2, feedback: "Değerlendirmede fiyat, kalite, teslim süresi ve güvenilirlik dikkate alınır[cite: 1]." },
+                    { q: "Üretim planına göre 500 araç üretilecek ve araç başı 4 lastik gerekiyorsa, ERP'nin hesaplayacağı brüt malzeme ihtiyacı (lastik) ne kadardır?", options: ["500", "2000", "1500", "2500"], answer: 1, feedback: "500 araç x 4 lastik = 2000 lastik ihtiyacı hesaplanır[cite: 1]." },
+                    { q: "Yukarıdaki soruda toplam ihtiyaç 2000 lastik iken mevcut stok 1500 adet ise, ERP'nin satın alma modülüne ileteceği eksik miktar (net ihtiyaç) nedir?", options: ["500", "1500", "2000", "0"], answer: 0, feedback: "Toplam ihtiyaç 2000 - Mevcut Stok 1500 = Eksik miktar 500 lastiktir[cite: 1]." },
+                    { q: "Satın alınan malzemelerin depo girişi yapıldıktan ve fatura onaylandıktan sonra maliyetlerin kaydedilmesi ve ödeme planının başlatılması için bilgiler hangi modüle iletilir?", options: ["Stok Modülü", "Üretim Modülü", "Muhasebe Modülü", "Satış Modülü"], answer: 2, feedback: "Fatura ve ödeme kayıtları Muhasebe Modülü tarafından oluşturulur[cite: 1]." },
+                    { q: "Aşağıdakilerden hangisi satın alma yönetiminin amaçlarından biri değildir?", options: ["Kaliteli malzeme temin etmek", "Satın alma sürecini izlenebilir hale getirmek", "Gereksiz stok oluşmasını engellemek", "Tüm bütçeyi harcayarak kasayı boşaltmak"], answer: 3, feedback: "Amaç satın alma maliyetlerini azaltmak ve kaynakları verimli kullanmaktır[cite: 1]." }
+                ]
+            },
+            {
+                id: 3,
+                title: "4. Stok ve Depo Yönetimi",
+                content: `
+                    <img src="https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1200&q=80" alt="Warehouse Shelf" class="content-img">
+                    <div class="grid-cards">
+                        <div class="card">
+                            <h3>💰 Stok ve Stok Maliyeti Türleri</h3>
+                            <p>Stok, işletmenin üretimi sürdürmek veya talebi karşılamak için elinde bulundurduğu ekonomik değerli varlıklardır[cite: 1]. Stok bulundurmanın amacı üretimin sürekliliğini sağlamak ve acil durumlara hazırlıklı olmaktır[cite: 1]. Ancak stok bulundurmanın alan işgali, sermaye bağlanması ve bozulma gibi dezavantajları vardır[cite: 1].</p>
+                            <ul>
+                                <li><strong>Sipariş Maliyeti:</strong> Sipariş verme sürecindeki giderler.</li>
+                                <li><strong>Bulundurma Maliyeti:</strong> Depo kirası, personel gideri, elektrik, sigorta ve depolama ekipmanları masrafları[cite: 1].</li>
+                                <li><strong>Stok Yetersizliği Maliyeti:</strong> Malzeme eksiğinden dolayı üretimin durması, müşteri kaybı, acil satın alma fiyat farkları, gecikme cezaları[cite: 1].</li>
+                                <li><strong>Bozulma ve Fire Maliyeti:</strong> Uzun süre bekleme sonucu paslanma, son kullanma tarihi geçmesi, kırılma ve hasar görme kayıpları[cite: 1].</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>🏗️ Depo Organizasyonu ve Lokasyon Sistemi</h3>
+                            <p>Depo, malzemelerin belirli bir düzen içinde muhafaza edildiği alandır[cite: 1]. İyi bir depo organizasyonunda malzemeler kolay bulunur ve alan verimli kullanılır[cite: 1].</p>
+                            <p><strong>Lokasyon Sistemi:</strong> Her malzemenin depoda net bir adresi vardır[cite: 1]. Örnek: <em>A-01-03</em> adresi; A Bölgesi, 01 Raf Numarası, 03 Göz Numarası demektir[cite: 1].</p>
+                        </div>
+
+                        <div class="card">
+                            <h3>📡 Modern Depo İzleme Teknolojileri</h3>
+                            <table>
+                                <tr>
+                                    <th>Teknoloji</th>
+                                    <th>Özellikleri ve Avantajları</th>
+                                </tr>
+                                <tr>
+                                    <td><strong>Barkod</strong></td>
+                                    <td>Çizgisel kod sistemidir. Mal kabul ve sayım işlemlerini optik okuyucu ile (tek tek) hatasız hale getirir[cite: 1].</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Karekod (QR)</strong></td>
+                                    <td>İki boyutlu koddur. Barkoda göre çok daha fazla bilgi (üretim tarihi, son kullanma, parti no) depolar[cite: 1]. Akıllı telefonlarla okunabilir[cite: 1].</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>RFID</strong></td>
+                                    <td>Radyo frekansları kullanır. <em>Temassız okuma</em> yapar ve <em>aynı anda çok sayıda ürünü</em> saniyeler içinde okuyarak sayım süresini ve insan hatasını minimize eder[cite: 1].</td>
+                                </tr>
+                            </table>
+                            <div class="highlight-box">
+                                <strong>Stok Türleri Hatırlatma:</strong> Yedek Parça (makine bakımı, rulman), Sarf Malzemesi (tükenen ofis malzemesi, eldiven, toner)[cite: 1].
+                            </div>
+                        </div>
+                    </div>
+                `,
+                questions: [
+                    { q: "Stokların depoda beklemesi nedeniyle oluşan depo kirası, sigorta, personel ve elektrik giderleri hangi maliyet türüne girer?", options: ["Sipariş Maliyeti", "Bulundurma Maliyeti", "Stok Yetersizliği Maliyeti", "Bozulma Maliyeti"], answer: 1, feedback: "Depoda ürün tutmanın getirdiği fiziksel harcamalar Bulundurma Maliyetidir[cite: 1]." },
+                    { q: "İhtiyaç duyulan malzemenin stokta olmaması sebebiyle üretimin durması, müşteri kaybı yaşanması ve gecikme cezası ödenmesi hangi maliyet türüdür?", options: ["Stok Yetersizliği Maliyeti", "Bulundurma Maliyeti", "Bozulma ve Fire Maliyeti", "Satın Alma Maliyeti"], answer: 0, feedback: "Stokta ürün bulunmamasının yarattığı tüm olumsuz sonuçlar Stok Yetersizliği Maliyeti olarak adlandırılır[cite: 1]." },
+                    { q: "Uzun süre depoda bekleyen çelik sacların paslanması veya ilaçların son kullanma tarihinin geçmesi hangi maliyet sınıfındadır?", options: ["Sipariş Maliyeti", "Stok Yetersizliği Maliyeti", "Bozulma ve Fire Maliyeti", "Bulundurma Maliyeti"], answer: 2, feedback: "Zamanla oluşan fiziksel veya kimyasal kayıplar Bozulma ve Fire Maliyetidir[cite: 1]." },
+                    { q: "Makine ve ekipmanların bakım ve onarımında kullanılan rulman, motor kayışı, elektrik kartı gibi malzemelere ne ad verilir?", options: ["Hammadde", "Mamul", "Sarf Malzemesi", "Yedek Parça"], answer: 3, feedback: "Bakım ve onarımda kullanılan makine parçalarına Yedek Parça denir[cite: 1]." },
+                    { q: "Kullanıldıkça tükenen ve tekrar kullanılması mümkün olmayan yazıcı toneri, eldiven, kağıt gibi malzemeler hangi sınıftadır?", options: ["Sarf Malzemesi", "Yarı Mamul", "Yedek Parça", "Demirbaş"], answer: 0, feedback: "Bu tür ofis ve temizlik malzemeleri Sarf Malzemesidir[cite: 1]." },
+                    { q: "Depo organizasyonunda bir malzemenin adresinin (Bölge, Raf Numarası, Göz Numarası) belirlenmesi yöntemine ne denir?", options: ["MRP Sistemi", "Lokasyon Sistemi", "Kalite Kontrol Sistemi", "Fiyatlama Sistemi"], answer: 1, feedback: "Malzemelerin depodaki kesin koordinatlarını belirten adresleme yöntemine Lokasyon Sistemi denir[cite: 1]." },
+                    { q: "Geleneksel barkoda göre çok daha fazla veri (parti no, üretim tarihi vb.) saklayabilen, iki boyutlu kod sistemine ne ad verilir?", options: ["RFID", "Karekod (QR Kod)", "Barkod", "Seri Numarası"], answer: 1, feedback: "İki boyutlu ve yüksek kapasiteli yapı Karekod (QR Kod) sistemidir[cite: 1]." },
+                    { q: "Radyo frekanslarını kullanarak malzemelerin temassız şekilde ve aynı anda çok sayıda (topluca) okunmasını sağlayan teknoloji hangisidir?", options: ["Karekod (QR Kod)", "Barkod", "RFID (Radio Frequency Identification)", "Bluetooth"], answer: 2, feedback: "RFID teknolojisi radyo dalgalarıyla temassız ve toplu okuma sağlayarak sayım süresini kısaltır[cite: 1]." },
+                    { q: "Aşağıdakilerden hangisi stok bulundurmanın dezavantajlarından biri DEĞİLDİR?", options: ["Depolama alanı gerektirmesi", "Sermayenin stokta beklemesi", "Bozulma ve fire riski taşıması", "Üretimin sürekliliğini sağlaması"], answer: 3, feedback: "Üretimin sürekliliğini sağlamak bir dezavantaj değil, stok bulundurmanın temel amacı ve avantajıdır[cite: 1]." },
+                    { q: "Aşağıdakilerden hangisi ERP'de stok yönetimi işlemlerinden biri değildir?", options: ["Depolar arası transfer", "Stok sayımı", "Fabrika binasının inşaat planını çizmek", "Minimum ve maksimum stok takibi"], answer: 2, feedback: "ERP stok modülü transfer, sayım, min/max limit takibi yapar; inşaat planı çizmez[cite: 1]." }
+                ]
+            },
+            {
+                id: 4,
+                title: "5. Üretim Planlama",
+                content: `
+                    <img src="https://images.unsplash.com/photo-1565439390118-9fd12c95d898?auto=format&fit=crop&w=1200&q=80" alt="Manufacturing" class="content-img">
+                    <div class="grid-cards">
+                        <div class="card">
+                            <h3>⚙️ Üretim Planlama Nedir?</h3>
+                            <p>Müşteri taleplerini zamanında ve en düşük maliyetle karşılayabilmek amacıyla işletmenin iş gücü, makine, malzeme ve kapasite gibi kaynaklarının ne zaman, ne miktarda ve nasıl kullanılacağını planlayan yönetim sürecidir[cite: 1].</p>
+                            <p>Doğru ürünün, doğru miktarda, doğru zamanda ve mevcut kaynaklar en verimli kullanılarak üretilmesini sağlar[cite: 1].</p>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>🎯 Üretim Planlamanın Amaçları ve ERP Katkısı</h3>
+                            <ul>
+                                <li><strong>Doğru Miktarda Üretim:</strong> Gereğinden fazla üretim stok maliyetini artırır; yetersiz üretim müşteri talebini karşılayamaz[cite: 1]. ERP talep tahminlerini analiz eder[cite: 1].</li>
+                                <li><strong>Doğru Zamanda Üretmek:</strong> Erken üretim stok oluşturur, geç üretim gecikme yaratır[cite: 1]. ERP üretim takvimini ayarlar[cite: 1].</li>
+                                <li><strong>Kaynakları Verimli Kullanmak:</strong> İş gücü, makine ve malzemelerin kapasite dengesi sağlanır, atıl (boşta) kaynak kullanımı azaltılır[cite: 1].</li>
+                                <li><strong>Üretim Maliyetlerini Azaltmak:</strong> Bekleme süreleri, acil satın alma, fire ve fazla stok maliyetleri MRP ile önlenir[cite: 1].</li>
+                            </ul>
+                        </div>
+
+                        <div class="card">
+                            <h3>🔄 Üretim Planlama Süreç Akışı</h3>
+                            <p>Süreç, müşteri talebinin veya satış siparişinin alınmasıyla başlar[cite: 1].</p>
+                            <ol>
+                                <li>Satış tahmini / Müşteri siparişi alınır[cite: 1].</li>
+                                <li>Üretim planı hazırlanır (Üretilecek ürün ve miktar belirlenir)[cite: 1].</li>
+                                <li>Ürün ağacı (BOM) incelenir[cite: 1].</li>
+                                <li><strong>Malzeme İhtiyaç Planlaması (MRP)</strong> hesaplanır[cite: 1].</li>
+                                <li>Stok Kontrolü yapılır:
+                                    <ul>
+                                        <li><em>Stok Yeterli ise:</em> Üretim Emri verilir[cite: 1].</li>
+                                        <li><em>Stok Yetersiz ise:</em> Eksik malzemeler için Satın Alma Talebi oluşturulur[cite: 1].</li>
+                                    </ul>
+                                </li>
+                                <li>Üretim gerçekleştirilir ve ürün Mamul Deposuna alınır[cite: 1].</li>
+                            </ol>
+                        </div>
+                    </div>
+                `,
+                questions: [
+                    { q: "Müşteri taleplerini zamanında ve en düşük maliyetle karşılamak amacıyla iş gücü, makine ve malzemelerin ne zaman kullanılacağını tasarlayan yönetim süreci nedir?", options: ["Kalite Kontrol", "İnsan Kaynakları", "Üretim Planlama", "Muhasebe Yönetimi"], answer: 2, feedback: "Kaynakların (iş gücü, makine, malzeme) üretim amacıyla verimli organizasyonuna Üretim Planlama denir[cite: 1]." },
+                    { q: "Üretim planlamada 'gereğinden fazla üretim yapmak' işletme için hangi olumsuz sonuca yol açar?", options: ["Müşteri taleplerinin karşılanamamasına", "Stok maliyetlerinin (bulundurma vb.) artmasına", "Kalitenin yükselmesine", "Makinelerin bozulmasına"], answer: 1, feedback: "Gereğinden fazla üretim, satılamayan ürünlerin depoda yer kaplamasına ve stok maliyetlerinin artmasına sebep olur[cite: 1]." },
+                    { q: "Üretim planlama sürecinin BAŞLANGIÇ noktası aşağıdakilerden hangisidir?", options: ["Mamul deposunun boşaltılması", "Satış tahmini veya müşteri siparişlerinin alınması", "İşçilerin mola saatlerinin ayarlanması", "Tedarikçiye fatura kesilmesi"], answer: 1, feedback: "Üretim planlaması her zaman pazarın talebi (müşteri siparişi veya satış tahmini) ile tetiklenir[cite: 1]." },
+                    { q: "Üretim planlamada, oluşturulan plana göre Malzeme İhtiyaç Planlaması (MRP) yapılıp stoklar kontrol edildikten sonra eğer stoklar YETERLİ ise bir sonraki adım ne olur?", options: ["Satın Alma Talebi oluşturulur", "Satış siparişi iptal edilir", "Doğrudan Üretim Emri verilir", "Tedarikçiyle pazarlık yapılır"], answer: 2, feedback: "Elde yeterli malzeme varsa satın almaya gerek duyulmaz, derhal Üretim Emri oluşturularak üretime geçilir[cite: 1]." },
+                    { q: "Eğer yapılan MRP ve stok kontrolü sonucunda depodaki hammaddeler YETERSİZ çıkarsa ERP sistemi hangi işlemi başlatır?", options: ["Mevcut stoğu çöpe atar", "Üretim emri verip eksik malzemeyle üretim dener", "Eksik malzemeler için Satın Alma Talebi oluşturur", "Müşteriye siparişi iptal ettiğini bildirir"], answer: 2, feedback: "Stok yetersizse üretimin yapılabilmesi için eksik parçaların sipariş edilmesi (Satın Alma Talebi) gerekir[cite: 1]." },
+                    { q: "Aşağıdakilerden hangisi üretimde kullanılan 'kaynaklar' arasında gösterilmez?", options: ["İş gücü", "Makineler", "Rakip firmanın reklam bütçesi", "Malzemeler"], answer: 2, feedback: "İş gücü, makineler, malzemeler ve üretim kapasitesi birer kaynaktır; rakip reklam bütçesi planlanamaz[cite: 1]." },
+                    { q: "Planlı üretim sayesinde işletmede hangi maliyetlerin azaltılması HEDEFLENMEZ?", options: ["Fazla stok maliyeti", "Bekleme süreleri ve üretim duruşları", "Acil satın alma maliyetleri", "Çalışanların hak ettiği maaşlar"], answer: 3, feedback: "Üretim planlama israfı ve verimsizliği azaltır; yasal personel maaşlarını düşürmek gibi bir amacı yoktur." },
+                    { q: "ERP'nin Üretim Planlamaya en büyük katkısı aşağıdakilerden hangisidir?", options: ["Fabrika duvarlarının boyanması", "Tüm satış, stok ve malzeme verilerini analiz ederek süreci izlenebilir ve entegre hale getirmesi", "Sadece muhasebe fişi basması", "Sendika görüşmelerini yapması"], answer: 1, feedback: "ERP satış siparişini, stoğu ve MRP'yi entegre ederek tüm üretim döngüsünü tek ekrandan yönetilebilir kılar[cite: 1]." }
+                ]
+            },
+            {
+                id: 5,
+                title: "6. Malzeme İhtiyaç Planlama (MRP)",
+                content: `
+                    <img src="https://images.unsplash.com/photo-1507925922893-873105f4df6c?auto=format&fit=crop&w=1200&q=80" alt="Planning" class="content-img">
+                    <div class="grid-cards">
+                        <div class="card">
+                            <h3>🧮 MRP Nedir ve Amacı</h3>
+                            <p><strong>MRP (Material Requirements Planning - Malzeme İhtiyaç Planlama)</strong>, üretim için gerekli malzemelerin hangi miktarda, hangi tarihte ve ne zaman temin edilmesi gerektiğini hesaplayan sistemdir[cite: 1].</p>
+                            <p>Temel amacı, malzeme eksikliğinden kaynaklanan üretim duruşlarını önlemek, aynı zamanda gereğinden fazla stok bulundurmayı engelleyerek satın alma süreçlerini optimize etmektir[cite: 1].</p>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>🌳 Ürün Ağacı (BOM - Bill of Materials)</h3>
+                            <p>BOM, bir ürünün üretilebilmesi için gerekli olan tüm malzemelerin ve bu malzemelerin miktarlarını gösteren listedir (ürün reçetesi)[cite: 1]. MRP hesaplamalarının temelini oluşturur[cite: 1].</p>
+                            <p><strong>Bisiklet Örneği:</strong> 1 Bisiklet = 1 Gövde + 2 Tekerlek + 1 Gidon + 1 Sele + 2 Pedal[cite: 1]. 100 bisiklet üretilecekse sistem BOM'a bakarak 200 adet tekerlek (100x2) gerektiğini hesaplar[cite: 1].</p>
+                        </div>
+
+                        <div class="card">
+                            <h3>📊 MRP'nin Mantığı ve Sayısal Örnek</h3>
+                            <p>MRP sistemi üretim planına göre Brüt İhtiyacı bulur, Mevcut Stoku kontrol eder ve Net (Eksik) İhtiyacı belirler[cite: 1].</p>
+                            <p><strong>Sayısal Örnek:</strong> Bir işletme 100 masa üretecektir. 1 Masa için; 1 Tabla, 4 Ayak ve 20 Vida gereklidir[cite: 1].</p>
+                            <table>
+                                <tr>
+                                    <th>Malzeme</th>
+                                    <th>Toplam Gerekli (Brüt İhtiyaç)</th>
+                                    <th>Depodaki Mevcut Stok</th>
+                                    <th>Net İhtiyaç (Eksik/Satın Alınacak)</th>
+                                </tr>
+                                <tr>
+                                    <td>Tabla</td>
+                                    <td>100 x 1 = 100 adet</td>
+                                    <td>150 adet</td>
+                                    <td><strong>0 (Stok Yeterli)</strong> (50 adet artar)[cite: 1]</td>
+                                </tr>
+                                <tr>
+                                    <td>Ayak</td>
+                                    <td>100 x 4 = 400 adet</td>
+                                    <td>900 adet</td>
+                                    <td><strong>0 (Stok Yeterli)</strong> (500 adet artar)[cite: 1]</td>
+                                </tr>
+                                <tr>
+                                    <td>Vida</td>
+                                    <td>100 x 20 = 2.000 adet</td>
+                                    <td>1.200 adet</td>
+                                    <td><strong>800 adet (Eksik)</strong> (Satın Alma Talebi oluşturulur)[cite: 1]</td>
+                                </tr>
+                            </table>
+                            <div class="highlight-box">
+                                Bu hesaba göre sistem sadece eksik olan 800 adet vida için otomatik satın alma talebi oluşturur; tabla ve ayak için işlem yapmaz[cite: 1].
+                            </div>
+                        </div>
+                    </div>
+                `,
+                questions: [
+                    { q: "Üretim için gerekli malzemelerin hangi miktarda, hangi tarihte ve ne zaman temin edilmesi gerektiğini hesaplayan planlama sistemine ne ad verilir?", options: ["CRM (Müşteri İlişkileri)", "MRP (Malzeme İhtiyaç Planlama)", "BOM (Ürün Ağacı)", "SCM (Tedarik Zinciri)"], answer: 1, feedback: "Doğru miktar ve zamanı hesaplayarak üretimin durmasını önleyen sistem MRP'dir[cite: 1]." },
+                    { q: "Bir ürünün üretilebilmesi için gerekli olan tüm alt bileşenlerin ve bunların kullanım miktarlarını gösteren listeye (reçeteye) ne ad verilir?", options: ["Malzeme Kartı", "Ürün Ağacı (BOM - Bill of Materials)", "İrsaliye Listesi", "Fatura"], answer: 1, feedback: "Ürünün reçetesini ve malzeme bileşenlerini gösteren belge BOM (Ürün Ağacı)'dur[cite: 1]." },
+                    { q: "Bir dolap üretimi için BOM listesinde 6 adet menteşe gereklidir. İşletme 50 dolap üretecektir. MRP'nin hesaplayacağı Brüt İhtiyaç (Toplam Gereksinim) kaç adet menteşedir?", options: ["50", "150", "300", "600"], answer: 2, feedback: "Brüt İhtiyaç = Üretim Miktarı (50) x BOM Miktarı (6) = 300 adet menteşe[cite: 1]." },
+                    { q: "Yukarıdaki dolap örneğinde Brüt İhtiyaç 300 menteşedir. Depoda mevcut 120 adet menteşe stoku varsa, MRP'nin satın alma modülüne ileteceği Net İhtiyaç (Eksik Miktar) kaç adettir?", options: ["180", "120", "300", "420"], answer: 0, feedback: "Net İhtiyaç = Brüt İhtiyaç (300) - Mevcut Stok (120) = 180 adet satın alınmalıdır[cite: 1]." },
+                    { q: "MRP hesaplaması sonucunda eksik malzeme çıkmazsa (Mevcut Stok > Brüt İhtiyaç), sistemin yapacağı işlem aşağıdakilerden hangisi olur?", options: ["Fazla stoğu çöpe atmak", "Yine de tedbiren satın alma yapmak", "Satın alma talebi oluşturmadan doğrudan üretim emrini vermek", "Müşteriye siparişin iptal olduğunu söylemek"], answer: 2, feedback: "Malzeme tam ise satın alma yapılmaz, doğrudan üretim süreci başlatılır (Üretim Emri)[cite: 1]." },
+                    { q: "MRP sisteminin çalışması için aşağıdakilerden hangisi bir GİRDİ (Input) değildir?", options: ["Satış Siparişleri / Üretim Planı", "Ürün Ağacı (BOM) Bilgileri", "Mevcut Stok Bilgileri", "İşçilerin yol ve yemek masrafları"], answer: 3, feedback: "MRP, üretim miktarına, reçeteye (BOM) ve stoğa ihtiyaç duyar; işçi yemek parası muhasebe girdisidir[cite: 1]." },
+                    { q: "Aşağıdakilerden hangisi MRP'nin sağladığı avantajlardan biri değildir?", options: ["Üretim duruşlarını önlemesi", "Gereğinden fazla stok bulundurmayı engellemesi", "Satın alma süreçlerini planlaması", "Sistemin internet bağlantısını hızlandırması"], answer: 3, feedback: "MRP stokları, maliyetleri ve duruşları optimize eder; internet hızıyla ilgisi yoktur[cite: 1]." }
+                ]
+            }
+        ];
+
+        let userProgress = JSON.parse(localStorage.getItem('erpMasterProData')) || {};
+
+        function renderSidebar() {
+            const topicList = document.getElementById('topic-list');
+            topicList.innerHTML = '';
+            
+            erpData.forEach((topic) => {
+                const isCompleted = userProgress[topic.id] && userProgress[topic.id].completed;
+                const icon = isCompleted ? '<span style="color:var(--success)">✅</span>' : '<span>📖</span>';
+                
+                const btn = document.createElement('button');
+                btn.className = `topic-btn ${document.body.dataset.activeTopic == topic.id ? 'active' : ''}`;
+                btn.innerHTML = `<span>${topic.title}</span> ${icon}`;
+                btn.onclick = () => {
+                    document.body.dataset.activeTopic = topic.id;
+                    loadTopic(topic.id);
+                    renderSidebar();
+                };
+                topicList.appendChild(btn);
+            });
+        }
+
+        function loadTopic(id) {
+            const topic = erpData[id];
+            const contentArea = document.getElementById('content-area');
+            const hasPastResults = userProgress[id] && userProgress[id].answers;
+            
+            contentArea.innerHTML = ''; 
+            setTimeout(() => {
+                let html = `
+                    <h1 class="content-title">${topic.title}</h1>
+                    ${topic.content}
+                    <div class="card" style="text-align:center; background: #e0e7ff; border:none; margin-top:30px;">
+                        <button class="btn btn-gradient" onclick="startQuiz(${id})">📝 Konu Testini Çöz</button>
+                        ${hasPastResults ? `<button class="btn" style="background:#6b7280; color:white; margin-left:15px;" onclick="reviewQuiz(${id})">Geçmiş Analizini Gör</button>` : ''}
+                    </div>
+                `;
+                contentArea.innerHTML = html;
+            }, 50);
+        }
+
+        function startQuiz(topicId) {
+            const topic = erpData[topicId];
+            const contentArea = document.getElementById('content-area');
+            
+            let html = `<h1 class="content-title">${topic.title} - Değerlendirme Testi</h1><form id="quiz-form">`;
+            
+            topic.questions.forEach((q, index) => {
+                html += `
+                    <div class="question-block">
+                        <p class="question-text">${index + 1}. ${q.q}</p>
+                        ${q.options.map((opt, i) => `
+                            <label class="option-label">
+                                <input type="radio" name="q${index}" value="${i}"> ${opt}
+                            </label>
+                        `).join('')}
+                        <div id="feedback-${index}" class="feedback"></div>
+                    </div>
+                `;
+            });
+            
+            html += `<div style="text-align:right; margin-top:25px;">
+                        <button type="button" class="btn btn-gradient" onclick="submitQuiz(${topicId})" style="padding: 16px 35px; font-size:1.2rem;">✓ Testi Bitir ve Değerlendir</button>
+                     </div></form>`;
+            contentArea.innerHTML = html;
+            window.scrollTo(0,0);
+        }
+
+        function submitQuiz(topicId) {
+            const topic = erpData[topicId];
+            let allAnswered = true;
+            let userAnswers = [];
+            let score = 0;
+
+            topic.questions.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                const feedbackDiv = document.getElementById(`feedback-${index}`);
+                
+                if (!selected) { allAnswered = false; return; }
+
+                const selectedVal = parseInt(selected.value);
+                userAnswers.push(selectedVal);
+
+                if (selectedVal === q.answer) {
+                    feedbackDiv.className = 'feedback correct';
+                    feedbackDiv.innerHTML = '<strong>✅ Doğru Yanıt!</strong>';
+                    score++;
+                } else {
+                    feedbackDiv.className = 'feedback wrong';
+                    feedbackDiv.innerHTML = `<strong>❌ Hatalı.</strong> <br>💡 <em>Açıklama:</em> ${q.feedback}`;
+                }
+            });
+
+            if (!allAnswered) {
+                alert("Lütfen testteki tüm soruları işaretleyiniz.");
+                return;
+            }
+
+            if (!userProgress[topicId]) userProgress[topicId] = {};
+            userProgress[topicId].completed = true;
+            userProgress[topicId].answers = userAnswers;
+            localStorage.setItem('erpMasterProData', JSON.stringify(userProgress));
+            renderSidebar();
+            
+            if(!document.getElementById('return-btn')){
+                const scoreHtml = `<div class="card animate-up" style="margin-top:25px; text-align:center; border-color: ${score >= (topic.questions.length/2) ? 'var(--success)' : 'var(--danger)'}">
+                                    <h2>Test Sonucu: ${score} / ${topic.questions.length}</h2>
+                                   </div>`;
+                document.getElementById('quiz-form').insertAdjacentHTML('beforeend', scoreHtml + `<button id="return-btn" class="btn" style="background:#64748b; color:white; margin-top:15px; width:100%" onclick="loadTopic(${topicId})">🔙 Konuya Dön</button>`);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function reviewQuiz(topicId) {
+            const topic = erpData[topicId];
+            const savedAnswers = userProgress[topicId].answers;
+            const contentArea = document.getElementById('content-area');
+            
+            let html = `<h1 class="content-title">${topic.title} - Hata Analizi</h1>`;
+            topic.questions.forEach((q, index) => {
+                const userAns = savedAnswers[index];
+                const isCorrect = userAns === q.answer;
+                const border = isCorrect ? 'var(--success)' : 'var(--danger)';
+                
+                html += `
+                    <div class="question-block" style="border-left-color: ${border}">
+                        <p class="question-text">${index + 1}. ${q.q}</p>
+                        <p style="color:#6b7280; margin-bottom:12px;"><strong>İşaretlediğin:</strong> ${q.options[userAns]}</p>
+                        ${!isCorrect 
+                            ? `<div class="feedback wrong" style="display:block">❌ Hatalı. <br>💡 <em>Açıklama:</em> ${q.feedback}</div>` 
+                            : `<div class="feedback correct" style="display:block">✅ Bu soruyu doğru cevaplamışsın.</div>`}
+                    </div>
+                `;
+            });
+            html += `<button class="btn" style="background:#64748b; color:white; width:100%" onclick="loadTopic(${topicId})">🔙 Konuya Dön</button>`;
+            contentArea.innerHTML = html;
+            window.scrollTo(0,0);
+        }
+
+        function loadFinalExam(examId) {
+            document.body.dataset.activeTopic = -1;
+            renderSidebar();
+            
+            const contentArea = document.getElementById('content-area');
+            let allQuestions = [];
+            
+            // Tüm sorulardan havuz oluştur
+            erpData.forEach((topic) => {
+                topic.questions.forEach((q) => {
+                    allQuestions.push({ ...q, topicTitle: topic.title });
+                });
+            });
+
+            // Rastgele 20 soru seçimi (Havuzdan her sınav tıklandığında farklı karıştırır)
+            allQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 20); 
+
+            let html = `<h1 class="content-title" style="color:var(--warning)">🏆 Deneme Sınavı ${examId}</h1>
+                        <p style="margin-bottom:25px; font-size:1.1rem; color:var(--text-light)">Tüm modüllerden rastgele seçilmiş ${allQuestions.length} soru bulunmaktadır. Sınav sonrasında açıklamaları görebilirsin.</p>
+                        <form id="final-form">`;
+            
+            allQuestions.forEach((q, index) => {
+                html += `
+                    <div class="question-block" style="border-color:var(--warning)">
+                        <p><small style="color:var(--primary); font-weight:600;">📁 Modül: ${q.topicTitle}</small></p>
+                        <p class="question-text" style="margin-top:12px">${index + 1}. ${q.q}</p>
+                        ${q.options.map((opt, i) => `
+                            <label class="option-label">
+                                <input type="radio" name="fq${index}" value="${i}"> ${opt}
+                            </label>
+                        `).join('')}
+                        <div id="final-feedback-${index}" class="feedback" data-correct="${q.answer}" data-feedback="${q.feedback}"></div>
+                    </div>
+                `;
+            });
+            
+            html += `<div style="text-align:center; margin-top:35px;">
+                        <button type="button" class="btn btn-gradient" onclick="submitFinalExam(${allQuestions.length})" style="padding: 18px 45px; font-size:1.3rem;">Sınavı Tamamla</button>
+                     </div></form>`;
+            contentArea.innerHTML = html;
+            window.scrollTo(0,0);
+        }
+
+        function submitFinalExam(qCount) {
+            let allAnswered = true;
+            let score = 0;
+
+            for (let i = 0; i < qCount; i++) {
+                const selected = document.querySelector(`input[name="fq${i}"]:checked`);
+                const feedbackDiv = document.getElementById(`final-feedback-${i}`);
+                
+                if (!selected) { allAnswered = false; break; }
+
+                const selectedVal = parseInt(selected.value);
+                const correctVal = parseInt(feedbackDiv.getAttribute('data-correct'));
+                
+                if (selectedVal === correctVal) {
+                    feedbackDiv.className = 'feedback correct';
+                    feedbackDiv.innerHTML = '<strong>✅ Doğru!</strong>';
+                    score++;
+                } else {
+                    feedbackDiv.className = 'feedback wrong';
+                    feedbackDiv.innerHTML = `<strong>❌ Yanlış.</strong> <br>💡 <em>Düzeltme:</em> ${feedbackDiv.getAttribute('data-feedback')}`;
+                }
+            }
+
+            if (!allAnswered) {
+                alert("Lütfen sınavı bitirmeden önce tüm soruları cevaplayın.");
+                return;
+            }
+            
+            const form = document.getElementById('final-form');
+            form.insertAdjacentHTML('afterbegin', `
+                <div class="card animate-up" style="text-align:center; border-color:${score >= (qCount/2) ? 'var(--success)' : 'var(--danger)'}; margin-bottom:30px;">
+                    <h2 style="font-size:2.2rem; margin-bottom:10px;">Deneme Sonucu</h2>
+                    <p style="font-size:1.8rem; font-weight:700; color:var(--primary)">${score} / ${qCount} Doğru</p>
+                </div>
+            `);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        renderSidebar();
+    </script>
+</body>
+</html>
